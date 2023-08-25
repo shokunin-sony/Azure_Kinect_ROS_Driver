@@ -172,6 +172,15 @@ K4AROSDevice::K4AROSDevice()
 
     RCLCPP_INFO_STREAM(this->get_logger(),"Found " << k4a_device_count << " sensors");
 
+    if (params_.sensor_sn.front() == '\'')
+    {
+      params_.sensor_sn.erase(0,1);
+    }
+    if (params_.sensor_sn.back() == '\'')
+    {
+      params_.sensor_sn.pop_back();
+    }
+
     if (params_.sensor_sn != "")
     {
       RCLCPP_INFO_STREAM(this->get_logger(),"Searching for sensor with serial number: " << params_.sensor_sn);
@@ -768,7 +777,7 @@ k4a_result_t K4AROSDevice::getBodyMarker(const k4abt_body_t& body, std::shared_p
 
   // Set the lifetime to 0.25 to prevent flickering for even 5fps configurations.
   // New markers with the same ID will replace old markers as soon as they arrive.
-  marker_msg->lifetime = rclcpp::Duration(0.25);
+  marker_msg->lifetime = rclcpp::Duration(0, 250000000);
   marker_msg->id = body.id * 100 + jointType;
   marker_msg->type = Marker::SPHERE;
 
@@ -1472,3 +1481,4 @@ void K4AROSDevice::updateTimestampOffset(const std::chrono::microseconds& k4a_de
                                      std::floor(alpha * (device_to_realtime - device_to_realtime_offset_).count())));
   }
 }
+

@@ -2,15 +2,16 @@
 # Licensed under the MIT License.
 
 import os
+
+import launch_ros.actions
 import xacro
 from ament_index_python.packages import get_package_share_directory
 
-from launch import LaunchDescription, conditions
-from launch.actions import (DeclareLaunchArgument, GroupAction)
-from launch.substitutions import LaunchConfiguration, Command
-
 import launch.actions
-import launch_ros.actions
+from launch import LaunchDescription, conditions
+from launch.actions import DeclareLaunchArgument, GroupAction
+from launch.substitutions import Command, LaunchConfiguration
+
 
 def to_urdf(xacro_path, urdf_path=None):
     """Convert the given xacro file to URDF file.
@@ -53,6 +54,11 @@ def generate_launch_description():
         default_value="true" ,
         description="Flag to publish a standalone azure_description instead of the default robot_description parameter."),
     ##############################################
+    DeclareLaunchArgument(
+        'namespace',
+        default_value="",
+        description="The namespace of ROS nodes",
+    ),
     DeclareLaunchArgument(
         'depth_enabled',
         default_value="true",
@@ -141,6 +147,7 @@ def generate_launch_description():
         package='azure_kinect_ros_driver',
         executable='node',
         output='screen',
+        namespace=LaunchConfiguration('namespace'),
         parameters=[
             {'depth_enabled': launch.substitutions.LaunchConfiguration('depth_enabled')},
             {'depth_mode': launch.substitutions.LaunchConfiguration('depth_mode')},
@@ -152,8 +159,8 @@ def generate_launch_description():
             {'point_cloud': launch.substitutions.LaunchConfiguration('point_cloud')},
             {'rgb_point_cloud': launch.substitutions.LaunchConfiguration('rgb_point_cloud')},
             {'point_cloud_in_depth_frame': launch.substitutions.LaunchConfiguration('point_cloud_in_depth_frame')},
-            {'sensor_sn': launch.substitutions.LaunchConfiguration('sensor_sn')},
-            {'recording_file': launch.substitutions.LaunchConfiguration('recording_file')},
+            {'sensor_sn': launch_ros.parameter_descriptions.ParameterValue(launch.substitutions.LaunchConfiguration('sensor_sn'), value_type=str)},
+            {'recording_file': launch_ros.parameter_descriptions.ParameterValue(launch.substitutions.LaunchConfiguration('recording_file'), value_type=str)},
             {'recording_loop_enabled': launch.substitutions.LaunchConfiguration('recording_loop_enabled')},
             {'body_tracking_enabled': launch.substitutions.LaunchConfiguration('body_tracking_enabled')},
             {'body_tracking_smoothing_factor': launch.substitutions.LaunchConfiguration('body_tracking_smoothing_factor')},
@@ -167,12 +174,14 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
+        namespace=LaunchConfiguration('namespace'),
         parameters = [{'robot_description' : urdf}],
         condition=conditions.IfCondition(launch.substitutions.LaunchConfiguration("overwrite_robot_description"))),
     launch_ros.actions.Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',
         name='joint_state_publisher',
+        namespace=LaunchConfiguration('namespace'),
         arguments=[urdf_path],
         condition=conditions.IfCondition(launch.substitutions.LaunchConfiguration("overwrite_robot_description"))),
     # If flag overwrite_robot_description is not set:
@@ -180,6 +189,7 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
+        namespace=LaunchConfiguration('namespace'),
         parameters = [{'robot_description' : urdf}],
         remappings=remappings,
         condition=conditions.UnlessCondition(launch.substitutions.LaunchConfiguration("overwrite_robot_description"))),
@@ -187,6 +197,7 @@ def generate_launch_description():
         package='joint_state_publisher',
         executable='joint_state_publisher',
         name='joint_state_publisher',
+        namespace=LaunchConfiguration('namespace'),
         arguments=[urdf_path],
         remappings=remappings,
         condition=conditions.UnlessCondition(launch.substitutions.LaunchConfiguration("overwrite_robot_description"))),
