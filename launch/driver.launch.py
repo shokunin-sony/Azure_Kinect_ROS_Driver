@@ -55,6 +55,11 @@ def generate_launch_description():
         description="Flag to publish a standalone azure_description instead of the default robot_description parameter."),
     ##############################################
     DeclareLaunchArgument(
+        'tf_prefix',
+        default_value="",
+        description="The prefix to the tf and tf_static published by this camera",
+    ),
+    DeclareLaunchArgument(
         'namespace',
         default_value="",
         description="The namespace of ROS nodes",
@@ -149,6 +154,7 @@ def generate_launch_description():
         output='screen',
         namespace=LaunchConfiguration('namespace'),
         parameters=[
+            {'tf_prefix': launch.substitutions.LaunchConfiguration('tf_prefix')},
             {'depth_enabled': launch.substitutions.LaunchConfiguration('depth_enabled')},
             {'depth_mode': launch.substitutions.LaunchConfiguration('depth_mode')},
             {'depth_unit': launch.substitutions.LaunchConfiguration('depth_unit')},
@@ -175,7 +181,7 @@ def generate_launch_description():
         executable='robot_state_publisher',
         name='robot_state_publisher',
         namespace=LaunchConfiguration('namespace'),
-        parameters = [{'robot_description' : urdf}],
+        parameters = [{'robot_description' : urdf, 'frame_prefix' : LaunchConfiguration('tf_prefix')}],
         condition=conditions.IfCondition(launch.substitutions.LaunchConfiguration("overwrite_robot_description"))),
     launch_ros.actions.Node(
         package='joint_state_publisher',
@@ -190,7 +196,7 @@ def generate_launch_description():
         executable='robot_state_publisher',
         name='robot_state_publisher',
         namespace=LaunchConfiguration('namespace'),
-        parameters = [{'robot_description' : urdf}],
+        parameters = [{'robot_description' : urdf, 'frame_prefix' : LaunchConfiguration('tf_prefix')}],
         remappings=remappings,
         condition=conditions.UnlessCondition(launch.substitutions.LaunchConfiguration("overwrite_robot_description"))),
     launch_ros.actions.Node(

@@ -58,6 +58,7 @@ K4AROSDevice::K4AROSDevice()
   static const std::string compressed_png_level = "/compressed/png_level";
 
   // Declare node parameters
+  this->declare_parameter("tf_prefix", rclcpp::ParameterValue(""));
   this->declare_parameter("depth_enabled", rclcpp::ParameterValue(true));
   this->declare_parameter("depth_mode", rclcpp::ParameterValue("NFOV_UNBINNED"));
   this->declare_parameter("color_enabled", rclcpp::ParameterValue(false));
