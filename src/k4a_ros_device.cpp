@@ -947,7 +947,7 @@ void K4AROSDevice::framePublisherThread()
       // Only create ir frame when we are using a device or we have an ir image.
       // Recordings may not have synchronized captures. For unsynchronized captures without ir image skip ir frame.
 
-      if ((this->count_subscribers("ir/image_raw") > 0 || this->count_subscribers("ir/camera_info") > 0) &&
+      if ((ir_raw_publisher_.getNumSubscribers() > 0 || this->count_subscribers("ir/camera_info") > 0) &&
            (k4a_device_ || capture.get_ir_image() != nullptr))
       {
         // IR images are available in all depth modes
@@ -980,8 +980,8 @@ void K4AROSDevice::framePublisherThread()
         // Recordings may not have synchronized captures. For unsynchronized captures without depth image skip depth
         // frame.
 
-          if ((this->count_subscribers("depth/image_raw") > 0 || this->count_subscribers("depth/camera_info") > 0) &&
-             (k4a_device_ || capture.get_depth_image() != nullptr))
+	if ((depth_raw_publisher_.getNumSubscribers() > 0 || this->count_subscribers("depth/camera_info") > 0) &&
+	    (k4a_device_ || capture.get_depth_image() != nullptr))
         {
           result = getDepthFrame(capture, depth_raw_frame);
 
@@ -1010,10 +1010,10 @@ void K4AROSDevice::framePublisherThread()
         // Recordings may not have synchronized captures. For unsynchronized captures without depth image skip rect
         // depth frame.
 
-          if (params_.color_enabled &&
-             (this->count_subscribers("depth_to_rgb/image_raw") > 0 ||
-              this->count_subscribers("depth_to_rgb/camera_info") > 0) &&
-             (k4a_device_ || capture.get_depth_image() != nullptr))
+	if (params_.color_enabled &&
+	    (depth_rect_publisher_.getNumSubscribers() > 0 ||
+	     this->count_subscribers("depth_to_rgb/camera_info") > 0) &&
+	    (k4a_device_ || capture.get_depth_image() != nullptr))
         {
           result = getDepthFrame(capture, depth_rect_frame, true /* rectified */);
 
@@ -1088,7 +1088,7 @@ void K4AROSDevice::framePublisherThread()
       }
       else if (params_.color_format == "bgra")
       {
-        if ((this->count_subscribers("rgb/image_raw") > 0 || this->count_subscribers("rgb/camera_info") > 0) &&
+        if ((rgb_raw_publisher_.getNumSubscribers() > 0 || this->count_subscribers("rgb/camera_info") > 0) &&
             (k4a_device_ || capture.get_color_image() != nullptr))
         {
           result = getRbgFrame(capture, rgb_raw_frame);
@@ -1116,7 +1116,7 @@ void K4AROSDevice::framePublisherThread()
         // not have synchronized captures. For unsynchronized captures image skip rgb rect frame.
 
         if (params_.depth_enabled && (calibration_data_.k4a_calibration_.depth_mode != K4A_DEPTH_MODE_PASSIVE_IR) &&
-            (this->count_subscribers("rgb_to_depth/image_raw") > 0 || this->count_subscribers("rgb_to_depth/camera_info") > 0) &&
+            (rgb_rect_publisher_.getNumSubscribers() > 0 || this->count_subscribers("rgb_to_depth/camera_info") > 0) &&
             (k4a_device_ || (capture.get_color_image() != nullptr && capture.get_depth_image() != nullptr)))
         {
           result = getRbgFrame(capture, rgb_rect_frame, true /* rectified */);
@@ -1226,7 +1226,7 @@ void K4AROSDevice::bodyPublisherThread()
           body_marker_publisher_->publish(*markerArrayPtr);
         }
 
-        if (this->count_subscribers("body_index_map/image_raw") > 0)
+        if (body_index_map_publisher_.getNumSubscribers() > 0)
         {
           // Body index map
           Image::SharedPtr body_index_map_frame(new Image);
